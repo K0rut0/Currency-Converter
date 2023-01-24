@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Currency Converter</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        #bg{
+            background-color: #121212;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #container{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            row-gap: 15px;
+        }
+        #formId{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            row-gap: 15px;
+        }
+        .textInput{
+            border: 1px solid black;
+            border-radius: 5px;
+            height: 20px;
+        }
+        .text{
+            color: white;
+            font-family: sans-serif;
+        }
+        .submitBtn{
+            background-color: #8AE5E5;
+            border: none;
+            border-radius: 5px;
+        }
+        #output{
+            width: 100%;
+            background-color: white;
+            border: none;
+            border-radius: 5px;
+            height: 30px;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="bg">
+        <div id="container">
+            <form id="formId">
+                <div>
+                    <label class="text">From:</label>
+                    <input class="textInput" id="from" type="text" placeholder="Type Currency Code" required/>
+                    <label class="text">To:</label>
+                    <input class="textInput" id='to' type="text" placeholder="Type Currency Code" required />
+                </div>
+                <input class="textInput" id='amount' type="text" placeholder="Enter your desired amount">
+                <input class='submitBtn'id="submit" type="submit" value="Convert" disabled>
+            </form>
+            <div id="output">
+            </div>
+        </div>
+    </div>
+    <script>
+        async function main(){
+            const formOne = document.getElementById('formId');
+            function convert(){
+                let testsec = new URLSearchParams();
+                testsec.append('from', `${document.getElementById('from').value.toUpperCase()}`);
+                testsec.append('to', `${document.getElementById('to').value.toUpperCase()}`)
+                testsec.append('amount', `${document.getElementById('amount').value}`)
+                return testsec;
+            }
+            let listOfCurr = await getList();
+
+            setInterval(function(){
+                const from = document.getElementById('from');
+                const to = document.getElementById('to');
+                const validIn = /^[a-zA-Z]+$/;
+                console.log(listOfCurr);
+                const submitButton = document.getElementById('submit');
+                if(to.value.length == 3 && to.value.match(validIn) && from.value.match(validIn) && ((to.value in listOfCurr.currencies) && (from.value in listOfCurr.currencies))){
+                    submitButton.disabled = false;  
+                } else {
+                    submitButton.disabled = true;
+                }
+            }, 500);
+
+            async function getList(){
+                let list = await fetch('http://127.0.0.1:3000/list').then(data => data.json());
+                return list;
+            }
+            
+            document.getElementById('formId').addEventListener('submit', async function(event){
+                let vals = convert()
+                let options = {
+                    method: 'POST',
+                    body: vals
+                }
+                event.preventDefault();
+                let test = await fetch('http://127.0.0.1:3000', options).then(data => data.json());
+                const outputDiv = document.getElementById('output');
+                outputDiv.textContent = `${test} ${document.getElementById('to').value}`;
+                outputDiv.style.display = 'flex';
+            })
+        }
+        main();
+    </script>
+</body>
+</html>
